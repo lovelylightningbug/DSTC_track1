@@ -9,11 +9,15 @@ import csv
 from collections import defaultdict
 from tqdm import tqdm
 import json
+from nltk.corpus import stopwords
+
+
 
 words=set([])
 entities=set([])
 relations=set([])
 all=set([])
+
 
 def add_entity(entity):
   entities.add(entity)
@@ -92,3 +96,7 @@ if __name__=="__main__":
    write_ids(path+'entity_ids.txt',entities)
    write_ids(path+'relation_ids.txt',relations)
    write_ids(path+'word_ids.txt',words)
+   stop=set(stopwords.words('english'))
+   write_ids(path+'stopwords.txt',stop)
+   
+   
