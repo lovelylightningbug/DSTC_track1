@@ -3,10 +3,8 @@
 import argparse
 import csv
 import networkx as nx
+from tqdm import tqdm
 
-from text_util import clean_line
-
-PIPE = "|"
 HIGH_DEGREE_THRESHOLD = 50
 
 class KnowledgeGraph(object):
@@ -17,21 +15,25 @@ class KnowledgeGraph(object):
     """
     self.G = nx.DiGraph()
     with open(graph_path, 'r') as graph_file:
-      for line in graph_file:
-        line = clean_line(line)
-        e1, relation, e2 = line.split(PIPE)
-        self.G.add_edge(e1, e2, {"relation": relation})
-        if not unidirectional:
-          self.G.add_edge(e2, e1, {"relation": self.get_inverse_relation(relation)})
-
+        reader = csv.DictReader(graph_file, delimiter="\t", fieldnames=['e1_relation', 'e2'])
+        for row in tqdm(reader):
+            entity_relation, e2 = row['e1_relation'], row['e2']
+            tokens=entity_relation.split()
+            e1=tokens[1]
+            relation=tokens[2]
+            self.G.add_edge(e1, e2, {"relation": relation})
+            if not unidirectional:
+                self.G.add_edge(e2, e1, {"relation": self.get_inverse_relation(relation)})
+    
     self.high_degree_nodes = set([])
     indeg = self.G.in_degree()
     for v in indeg:
       if indeg[v] > HIGH_DEGREE_THRESHOLD:
         self.high_degree_nodes.add(v)
     self.all_entities = set(nx.nodes(self.G))
-
-
+  
+    
+    
   def get_inverse_relation(self, relation):
     return "INV_"+relation
 
@@ -98,12 +100,15 @@ class KnowledgeGraph(object):
 
 
 if __name__ == "__main__":
-  graph_path = "../../data/movieqa/clean_wiki-entities_kb_graph.txt"
+  graph_path = "../data/extendedkb1.txt"
   kb = KnowledgeGraph(graph_path, unidirectional=False)
-  entities_paths, relations_paths = kb.get_all_paths(source="moonraker", target="lewis gilbert", cutoff=3)
-  print kb.get_candidate_neighbors("moonraker")
-  print len(kb.get_candidate_neighbors("moonraker", num_hops=2))
-  kb.log_statistics()
-  print kb.get_candidate_neighbors("what", num_hops=1)
-  for path in kb.get_all_paths('bruce lee', 'bruce lee', cutoff=2):
-    print path
+ 
+  
+  
+ # entities_paths, relations_paths = kb.get_all_paths(source="moonraker", target="lewis gilbert", cutoff=3)
+#  print kb.get_candidate_neighbors("moonraker")
+#  print len(kb.get_candidate_neighbors("moonraker", num_hops=2))
+#  kb.log_statistics()
+#  print kb.get_candidate_neighbors("what", num_hops=1)
+#  for path in kb.get_all_paths('bruce lee', 'bruce lee', cutoff=2):
+#    print path
