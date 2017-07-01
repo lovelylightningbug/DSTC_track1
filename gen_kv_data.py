@@ -73,6 +73,7 @@ def main(args):
 #                                               'sources', 'relations', 'targets'])
             lst=[]
             for story in tqdm(reader):
+                dialog_id=story['dialog_id']
                 ans=story['answer']
                 ans_candidates=story['candidates']
                 question=story['utterances'][-1]
@@ -90,6 +91,7 @@ def main(args):
                 relations = extract_dimension_from_tuples_as_list(tuples, 1)
                 targets = extract_dimension_from_tuples_as_list(tuples, 2)
                 output_row = {
+                  'dialog_id':dialog_id,
                   'question': question,
                   'qn_entities': list(qn_entities),
                   'ans': ans,
@@ -117,5 +119,4 @@ if __name__ == "__main__":
   stop_vocab = read_file_as_dict(args.stopwords)
   question_parser = QuestionParser(knowledge_base.get_entities(), stop_vocab)
   main(args)
-  with open('../data/kvdata.json','r') as ff:
-    aa=json.load(ff)
+  

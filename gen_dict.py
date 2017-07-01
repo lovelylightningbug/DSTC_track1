@@ -54,6 +54,12 @@ def read_kb_file(graph_path):
       relations.add(relation)
       relations.add("INV_"+relation)
 
+def union(*sets):
+  target_set = set([])
+  for s in sets:
+    target_set = target_set.union(s)
+  return target_set
+
 def write_ids(ids_path, s):
   ordered = sorted(s)
   id = 1
@@ -98,5 +104,8 @@ if __name__=="__main__":
    write_ids(path+'word_ids.txt',words)
    stop=set(stopwords.words('english'))
    write_ids(path+'stopwords.txt',stop)
+   
+   all = union(words, entities, relations)
+   write_ids(path+'ids.txt',all)
    
    
