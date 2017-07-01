@@ -35,14 +35,54 @@ flags.DEFINE_integer("max_slots", 64, "maximum slots in the memory")
 FLAGS = flags.FLAGS
 QUESTION = "question"
 QN_ENTITIES = "qn_entities"
-ANS_ENTITIES = "ans_entities"
+ANS_CAND = "ans_candidates"
 SOURCES = "sources"
 RELATIONS = "relations"
 TARGETS = "targets"
-ANSWER = "answer"
+ANSWER = "ans"
 KEYS = "keys"
 VALUES = "values"
+UTTERANCES="utterances"
 
+
+def pad(arr, L):
+  arr_cpy = list(arr)
+  assert (len(arr_cpy) <= L)
+  while len(arr_cpy) < L:
+    arr_cpy.append(0)
+  return arr_cpy
+
+def prepare_batch(batch_examples, maxlen):
+    batch_size = FLAGS.batch_size
+    batch_dict = {}
+    batch_dict[QUESTION] = get_padded_data(batch_examples,maxlen,QUESTION)
+    batch_dict[QN_ENTITIES] = get_padded_data(batch_examples,maxlen,QN_ENTITIES)
+    batch_dict[SOURCES] = get_padded_data(batch_examples,maxlen,SOURCES)
+    batch_dict[RELATIONS] = get_padded_data(batch_examples,maxlen,RELATIONS)
+    batch_dict[TARGETS] = get_padded_data(batch_examples,maxlen,TARGETS)
+    batch_dict[UTTERANCES] = []
+    for i in xrange(batch_size):
+        lst=[]
+        for utt in batch_examples[i][UTTERANCES]:
+            lst.append(pad(utt,maxlen[UTTERANCES]))
+        batch_dict[UTTERANCES].append(lst)
+    batch_dict[ANSWER] = []
+    for i in xrange(batch_size):
+        dic={}
+        dic['candidate_id']=batch_examples[i][ANSWER]['candidate_id']
+        dic['utterance']=pad(batch_examples[i][ANSWER]['utterance'],maxlen['ans_candidates'])
+        batch_dict[ANSWER].append(dic)
+
+
+              
+              
+def get_padded_data(batch_examples, maxlen, column_name):
+  batch_size = FLAGS.batch_size
+  column = []
+  for i in xrange(batch_size):
+    example = pad(batch_examples[i][column_name], maxlen[column_name])
+    column.append(np.array(example))
+  return np.array(column) #batch_size * maxlen(column_name)
 
 
 def main(args):
@@ -69,7 +109,13 @@ def main(args):
           save_path = os.path.join(FLAGS.checkpoint_dir, "model_kv.ckpt")
           saver.restore(sess, save_path)
           print("Model restored from file: %s" % save_path)
-    
+        max_test_accuracy = 0
+        for epoch in range(1, FLAGS.epochs+1):
+            np.random.shuffle(batches) #comment to run locally
+            #print model.get_nil_word_embedding()
+            for start, end in batches:
+                batch_examples = train_examples[start:end]
+                batch_dict = prepare_batch(batch_examples,maxlen)
 
 
 if __name__ == "__main__":

@@ -39,6 +39,14 @@ def get_maxlen(*paths):
         maxlen['sources'] = max(len(example['sources']), maxlen['sources'])
         maxlen['relations'] = maxlen['sources']
         maxlen['targets'] = maxlen['sources']
+        lstt=[]
+        for utt in example['utterances']:
+            lstt.append(len(utt.split(SPACE)))
+        maxlen['utterances']= max(max(lstt),maxlen['utterances'])
+        lst_ac=[]
+        for can in example['ans_candidates']:
+            lst_ac.append(len(can['utterance'].split(SPACE)))
+        maxlen['ans_candidates']=max(max(lst_ac),maxlen['ans_candidates'])
   return maxlen
 
 def read_file_as_dict(input_path):
@@ -114,7 +122,7 @@ class DatasetReader(object):
               if len(example[key])>0:
                   vec_example[key] = [encoder[word] for word in example[key]]
               else:
-                  vec_example[key] = 0
+                  vec_example[key] = [0]
           elif key=='question':
               vec_example[key] = [encoder[word] for word in example[key]]
           elif key=='relations' or key=='sources' or key=='targets':

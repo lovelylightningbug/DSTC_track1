@@ -28,7 +28,7 @@ class KeyValueMemNN(object):
     self.loss_op = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=self.answer))
     self.optimizer = tf.train.AdamOptimizer().minimize(self.loss_op)
     self.predict_op = tf.argmax(logits, 1, name="predict_op")
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
     self.sess.run(init_op)
 
 
@@ -40,6 +40,7 @@ class KeyValueMemNN(object):
     self.answer = tf.placeholder(tf.int32, shape=[None], name="answer")
     self.keys = tf.placeholder(tf.int32, [None, self.size[KEYS], 2], name="keys")
     self.values = tf.placeholder(tf.int32, [None, self.size[VALUES]], name="values")
+    self.ans_candidates=tf.placeholder(tf.int32,[None, 10, self.size['ans_candidates']],name="candidates")                                                                                                                         
     self.dropout_memory = tf.placeholder(tf.float32)
 
 
@@ -53,7 +54,7 @@ class KeyValueMemNN(object):
       initializer = tf.contrib.layers.xavier_initializer()
       E = tf.Variable(initializer([self.vocab_size, embedding_size]), name='E')
       self.A = tf.concat([nil_word_slot, E],0) # vocab_size+1 * embedding_size
-      self.B = tf.Variable(initializer([embedding_size, self.count_entities]), name='B')
+      self.B = tf.Variable(initializer([embedding_size, self.size['ans_candidates']]), name='B')
       self.R_list = []
       for k in  xrange(hops):
         R_k = tf.Variable(initializer([embedding_size, embedding_size]), name='H')
